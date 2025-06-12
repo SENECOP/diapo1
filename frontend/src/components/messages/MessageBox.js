@@ -45,6 +45,21 @@ export default function MessageBox() {
     setMessages((prev) => [...prev, { ...messageData, envoye_le: new Date() }]);
   };
 
+  useEffect(() => {
+  const fetchMessages = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/messages/${don_id}`);
+      const data = await response.json();
+      setMessages(data);
+    } catch (error) {
+      console.error("Erreur lors du chargement des messages :", error);
+    }
+  };
+
+  if (don_id) fetchMessages();
+}, [don_id]);
+
+
   return (
     <div className="flex flex-col w-2/3 bg-white">
       {/* Header */}

@@ -5,6 +5,7 @@ import { FaArrowLeft } from 'react-icons/fa';
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 
+
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
   const token = localStorage.getItem("token");

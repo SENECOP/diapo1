@@ -7,13 +7,22 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 
 const Message = () => {
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const userId = currentUser?._id;
+
   const [showAlert, setShowAlert] = useState(false);
   const [conversations, setConversations] = useState([]);
+   const addConversation = (conversation) => {
+    // Évite les doublons si conversation déjà dans la liste
+    setConversations((prev) => {
+      if (prev.find((c) => c.don_id === conversation.don_id)) return prev;
+      return [...prev, conversation];
+    });
+  };
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, messageInitial } = location.state || {};
-  const userId = JSON.parse(localStorage.getItem("user"))?._id;
+  const { user, messageInitial, conversationId } = location.state || {};
 
   // Gérer l'alerte de réservation
   useEffect(() => {
@@ -102,10 +111,10 @@ const Message = () => {
 
       <div className="flex h-screen">
         {/* Liste des conversations à gauche */}
-        <ConversationList conversations={conversations} />
+        <ConversationList conversations={conversations} currentUser={currentUser} />
 
         {/* Zone des messages à droite */}
-        <MessageBox user={user} messageInitial={messageInitial} />
+        <MessageBox user={user} messageInitial={messageInitial}  conversationId={conversationId} onAddConversation={addConversation}/>
       </div>
     </div>
   );
