@@ -13,17 +13,40 @@ const Message = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, messageInitial } = location.state || {};
+  const userId = JSON.parse(localStorage.getItem("user"))?._id;
 
   // Gérer l'alerte de réservation
   useEffect(() => {
-    const alertFlag = localStorage.getItem("AlerteReservation");
-    if (alertFlag === "true") {
-      setShowAlert(true);
-      localStorage.removeItem("AlerteReservation");
-    }
-  }, []);
+  if (location.state?.showReservationAlert) {
+    setShowAlert(true);
+  }
+}, [location.state]);
 
-  // Ajouter automatiquement le preneur à la liste des conversations (sans duplication)
+
+  // Charger les conversations depuis une API (exemple)
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchConversations = async () => {
+      try {
+        const response = await fetch(`https://diapo-app.onrender.com/api/conversations/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+
+        if (!response.ok) throw new Error("Erreur lors du chargement des conversations");
+        const data = await response.json();
+        setConversations(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchConversations();
+  }, [userId]);
+
+  // Ajouter automatiquement le preneur à la liste des conversations si pas déjà présent (cas particulier)
   useEffect(() => {
     if (user?.pseudo) {
       setConversations(prev => {
@@ -43,6 +66,20 @@ const Message = () => {
       });
     }
   }, [user, messageInitial]);
+
+  useEffect(() => {
+    async function fetchConversations() {
+      if (!userId) return;
+      try {
+        const res = await fetch(`/api/conversations/${userId}`);
+        const data = await res.json();
+        setConversations(data);
+      } catch (err) {
+        console.error('Erreur chargement conversations', err);
+      }
+    }
+    fetchConversations();
+  }, [userId]);
 
   return (
     <div className="p-4">
