@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Conversation = require('../models/Conversation');
+const Conversation = require('../models/conversation.js');
 const User = require('../models/User'); // pour récupérer pseudo/avatar
 
 // GET /api/conversations/:userId
