@@ -5,7 +5,6 @@ import { FaArrowLeft } from 'react-icons/fa';
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 
-
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
   const token = localStorage.getItem("token");
@@ -156,29 +155,36 @@ const NotificationPage = () => {
               </p>
 
               <button
-                onClick={async () => {
-              await markAsRead(notifications._id);
-              setNotifications(prev =>
-                prev.map(n => n._id === notifications._id ? { ...n, vu: true } : n)
-              );
+  onClick={async () => {
+    const notif = selectedNotification;
+    const donId = notif.don?._id;
+    const donorId = JSON.parse(localStorage.getItem("user"))?._id;
+    const receiverId = notif.emetteur?._id;
 
-              navigate('/message', {
-                state: {
-                  user: {
-                    pseudo: notifications.emetteur?.pseudo || "Utilisateur",
-                    avatar: notifications.emetteur?.avatar || "https://via.placeholder.com/50"
-                  },
-                  messageInitial: {
-                    image: notifications.don?.image_url || "https://via.placeholder.com/150",
-                    description: notifications.don?.description || "Aucune description fournie"
-                  }
-                }
-              });
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Contacter
-              </button>
+    try {
+      const response = await fetch("https://diapo-app.onrender.com/api/conversations/initiate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ donorId, receiverId, donId }),
+      });
+
+      if (!response.ok) throw new Error("Erreur lors de la création de la conversation");
+
+      const conversation = await response.json();
+
+      navigate(`/messagerie/${conversation._id}`);
+    } catch (error) {
+      console.error("Erreur lors de la redirection vers la messagerie :", error);
+    }
+  }}
+  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+>
+  Contacter
+</button>
+
             </div>
           ) : (
             <p>Sélectionnez une notification pour voir le détail du don.</p>
