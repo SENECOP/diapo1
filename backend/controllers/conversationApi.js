@@ -33,12 +33,6 @@ router.get('/:userId', async (req, res) => {
   }
 });
 
-// conversationsApi.js ou un nouveau fichier controller
-const Conversation = require('./conversations');
-
-// controllers/conversationsController.js
-const Conversation = require('../models/Conversation');
-
 exports.initiateConversation = async (req, res) => {
   const { donorId, receiverId, donId } = req.body;
 
