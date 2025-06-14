@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Conversation = require('../models/conversation');
+const { initiateConversation } = require('../controllers/conversationApi');
 
 router.get('/conversations/:userId', async (req, res) => {
   const { userId } = req.params;
