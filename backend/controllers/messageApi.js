@@ -1,5 +1,5 @@
 // controllers/messageController.js
-const Message = require('../models/message');
+const Message = require('../models/Message');
 
 exports.getMessagesByConversation = async (req, res) => {
   try {
