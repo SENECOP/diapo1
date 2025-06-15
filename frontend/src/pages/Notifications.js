@@ -97,7 +97,7 @@ const NotificationPage = () => {
 
       const conversation = await response.json();
 
-      navigate(`/messages/conversation/${conversation._id}`, {
+      navigate(`/messages`, {
         state: {
           conversationId: conversation._id,
           user: conversation.participants.find(p => p._id !== user._id),
