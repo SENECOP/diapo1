@@ -1,14 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from "react-router-dom";
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
-import { socket
-  
- } from '../../socket';
-export default function MessageBox() {
-  const location = useLocation();
-  const { user, messageInitial, don_id, currentUser } = location.state || {};
+import { socket } from '../../socket';
 
+export default function MessageBox({ user, messageInitial, conversationId: don_id, currentUser }) {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
@@ -46,19 +41,18 @@ export default function MessageBox() {
   };
 
   useEffect(() => {
-  const fetchMessages = async () => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/messages/${don_id}`);
-      const data = await response.json();
-      setMessages(data);
-    } catch (error) {
-      console.error("Erreur lors du chargement des messages :", error);
-    }
-  };
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/messages/${don_id}`);
+        const data = await response.json();
+        setMessages(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des messages :", error);
+      }
+    };
 
-  if (don_id) fetchMessages();
-}, [don_id]);
-
+    if (don_id) fetchMessages();
+  }, [don_id]);
 
   return (
     <div className="flex flex-col w-2/3 bg-white">

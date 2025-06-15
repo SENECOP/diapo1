@@ -7,6 +7,8 @@ const authRoutes = require('./routes/authRoutes');
 const donRoutes = require('./routes/donRoutes');
 const notificationsRoutes = require('./routes/notificationsRoute');
 const conversationRoutes = require('./routes/conversationRoutes.js')
+const messageRoutes = require('./routes/messageRoutes');
+
 const http = require('http');
 
 const app = express();
@@ -41,6 +43,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dons', donRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use("/api/conversations", conversationRoutes);
+app.use('/api/messages', messageRoutes);
 
 app.use('/uploads', express.static('uploads'));
 //app.options('*', cors());

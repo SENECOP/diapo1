@@ -37,6 +37,7 @@ exports.initiateConversation = async (req, res) => {
       console.log("Requête reçue :", req.body);
 
   const { donorId, receiverId, donId } = req.body;
+  console.log("🔍 Création conversation avec :", { donorId, receiverId, donId });
 
   try {
     // Vérifie si une conversation existe déjà
@@ -52,13 +53,11 @@ exports.initiateConversation = async (req, res) => {
 
     // Sinon, crée une nouvelle conversation
     const newConversation = new Conversation({
-      donorId,
-      receiverId,
-      donId,
-      createdAt: new Date(),
-      participants: [donorId, receiverId],
-      messages: []
-    });
+  donorId,
+  receiverId,
+  donId,
+  participants: [donorId, receiverId]
+});
 
     await newConversation.save();
     return res.status(201).json(newConversation);

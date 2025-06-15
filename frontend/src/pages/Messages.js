@@ -12,13 +12,6 @@ const Message = () => {
 
   const [showAlert, setShowAlert] = useState(false);
   const [conversations, setConversations] = useState([]);
-   const addConversation = (conversation) => {
-    // Évite les doublons si conversation déjà dans la liste
-    setConversations((prev) => {
-      if (prev.find((c) => c.don_id === conversation.don_id)) return prev;
-      return [...prev, conversation];
-    });
-  };
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,13 +19,12 @@ const Message = () => {
 
   // Gérer l'alerte de réservation
   useEffect(() => {
-  if (location.state?.showReservationAlert) {
-    setShowAlert(true);
-  }
-}, [location.state]);
+    if (location.state?.showReservationAlert) {
+      setShowAlert(true);
+    }
+  }, [location.state]);
 
-
-  // Charger les conversations depuis une API (exemple)
+  // Charger les conversations depuis l’API
   useEffect(() => {
     if (!userId) return;
 
@@ -55,7 +47,7 @@ const Message = () => {
     fetchConversations();
   }, [userId]);
 
-  // Ajouter automatiquement le preneur à la liste des conversations si pas déjà présent (cas particulier)
+  // Ajouter automatiquement une nouvelle conversation fictive si nécessaire
   useEffect(() => {
     if (user?.pseudo) {
       setConversations(prev => {
@@ -75,20 +67,6 @@ const Message = () => {
       });
     }
   }, [user, messageInitial]);
-
-  useEffect(() => {
-    async function fetchConversations() {
-      if (!userId) return;
-      try {
-        const res = await fetch(`/api/conversations/${userId}`);
-        const data = await res.json();
-        setConversations(data);
-      } catch (err) {
-        console.error('Erreur chargement conversations', err);
-      }
-    }
-    fetchConversations();
-  }, [userId]);
 
   return (
     <div className="p-4">
@@ -114,7 +92,12 @@ const Message = () => {
         <ConversationList conversations={conversations} currentUser={currentUser} />
 
         {/* Zone des messages à droite */}
-        <MessageBox user={user} messageInitial={messageInitial}  conversationId={conversationId} onAddConversation={addConversation}/>
+        <MessageBox
+          user={user}
+          messageInitial={messageInitial}
+          conversationId={conversationId}
+          currentUser={currentUser}
+        />
       </div>
     </div>
   );

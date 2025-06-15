@@ -1,0 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const messageController = require('../controllers/messageController');
+
+// POST /api/messages → créer un message
+router.post('/', messageController.createMessage);
+
+// GET /api/messages/don/:donId → récupérer tous les messages d’un don
+router.get('/conversation/:conversationId', messageController.getMessagesByConversation);
+
+module.exports = router;

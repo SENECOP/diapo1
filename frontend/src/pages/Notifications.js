@@ -91,15 +91,23 @@ const donId = selectedNotification.don?._id;
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          participants: [donorId, receiverId],
-          don: donId,
-        }),
+  donorId,
+  receiverId,
+  donId,
+}),
+
       });
 
       if (!response.ok) throw new Error("Erreur lors de la création de la conversation");
 
       const conversation = await response.json();
-      navigate(`/messagerie/${conversation._id}`);
+navigate(`/messagerie/${conversation._id}`, {
+  state: {
+    conversationId: conversation._id,
+    user: conversation.participants.find(p => p._id !== user._id),
+    messageInitial: "", // tu peux aussi passer un message personnalisé ici
+  }
+});
     } catch (error) {
       console.error("Erreur lors de la redirection vers la messagerie :", error);
     }
