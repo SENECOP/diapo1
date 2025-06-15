@@ -8,17 +8,20 @@ const donRoutes = require('./routes/donRoutes');
 const notificationsRoutes = require('./routes/notificationsRoute');
 const conversationRoutes = require('./routes/conversationRoutes.js')
 const messageRoutes = require('./routes/messageRoutes');
-
+const Message = require('./models/Message');
 const http = require('http');
 
 const app = express();
 const server = http.createServer(app);
 const { Server } = require('socket.io');
+
 const io = new Server(server, {
   cors: {
-    origin: '*', // à restreindre en prod
+    origin: '*', 
     methods: ['GET', 'POST']
-  }
+  },
+  pingInterval: 25000,
+  pingTimeout: 60000
 });
 
 const PORT = process.env.PORT || 5000;
