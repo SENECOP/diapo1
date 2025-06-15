@@ -8,7 +8,7 @@ const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null); // ✅ Déclaration du token
+  const [token, setToken] = useState(null);
 
   const navigate = useNavigate();
 
@@ -18,7 +18,7 @@ const NotificationPage = () => {
 
     if (!storedUser || !storedToken) {
       console.log("Utilisateur non connecté. Redirection...");
-      navigate("/login"); // ou autre route
+      navigate("/login");
       return;
     }
 
@@ -62,6 +62,7 @@ const NotificationPage = () => {
       console.error("Erreur lors du marquage comme lu :", error.message);
     }
   };
+  console.log("User state:", user)
 
   const handleContactClick = async () => {
     if (!user || !selectedNotification) {
@@ -69,20 +70,19 @@ const NotificationPage = () => {
       return;
     }
 
-    const donorId = selectedNotification.don?.user?._id || selectedNotification.don?.user;
-const receiverId =
-  typeof selectedNotification.emetteur === "string"
-    ? selectedNotification.emetteur
-    : selectedNotification.emetteur?._id;
-const donId = selectedNotification.don?._id;
+    const don_id = selectedNotification.don?._id;
+    const envoye_par = user.id || user._id;
+    const recu_par = typeof selectedNotification.emetteur === "string"
+      ? selectedNotification.emetteur
+      : selectedNotification.emetteur?._id;
 
-    if (!donorId || !receiverId || !donId) {
-      console.error("Données manquantes pour créer une conversation :", { donorId, receiverId, donId });
+    if (!envoye_par || !recu_par || !don_id) {
+      console.error("Données manquantes pour créer une conversation :", { envoye_par, recu_par, don_id });
       return;
     }
 
     try {
-      console.log("Envoi des données :", { donorId, receiverId, donId });
+      console.log("📨 Données envoyées :", { envoye_par, recu_par, don_id });
 
       const response = await fetch("https://diapo-app.onrender.com/api/conversations/initiate", {
         method: "POST",
@@ -90,24 +90,20 @@ const donId = selectedNotification.don?._id;
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-  donorId,
-  receiverId,
-  donId,
-}),
-
+        body: JSON.stringify({ envoye_par, recu_par, don_id }),
       });
 
       if (!response.ok) throw new Error("Erreur lors de la création de la conversation");
 
       const conversation = await response.json();
-navigate(`/messages/conversation/${conversation._id}`, {
-  state: {
-    conversationId: conversation._id,
-    user: conversation.participants.find(p => p._id !== user._id),
-    messageInitial: "", // tu peux aussi passer un message personnalisé ici
-  }
-});
+
+      navigate(`/messages/conversation/${conversation._id}`, {
+        state: {
+          conversationId: conversation._id,
+          user: conversation.participants.find(p => p._id !== user._id),
+          messageInitial: ""
+        }
+      });
     } catch (error) {
       console.error("Erreur lors de la redirection vers la messagerie :", error);
     }

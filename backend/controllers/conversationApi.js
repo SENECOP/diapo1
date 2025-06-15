@@ -2,25 +2,25 @@ const mongoose = require('mongoose');
 const Conversation = require('../models/conversation');
 
 exports.initiateConversation = async (req, res) => {
-  const { donorId, receiverId, donId } = req.body;
+  const { envoye_par, recu_par, don_id } = req.body;
 
-  console.log("💬 [INITIATE] Donor:", donorId, "Receiver:", receiverId, "Don:", donId);
+  console.log("💬 [INITIATE] Envoyé par:", envoye_par, "Reçu par:", recu_par, "Don:", don_id);
 
-  if (!donorId || !receiverId || !donId) {
+  if (!envoye_par || !recu_par || !don_id) {
     return res.status(400).json({ message: "Champs manquants pour créer une conversation." });
   }
 
   try {
     // Convertir les IDs en ObjectId
-    const donorObjectId = new mongoose.Types.ObjectId(donorId);
-    const receiverObjectId = new mongoose.Types.ObjectId(receiverId);
-    const donObjectId = new mongoose.Types.ObjectId(donId);
+    const senderId = new mongoose.Types.ObjectId(envoye_par);
+    const receiverId = new mongoose.Types.ObjectId(recu_par);
+    const donObjectId = new mongoose.Types.ObjectId(don_id);
 
     // Vérifie si une conversation existe déjà entre ces trois entités
     let existing = await Conversation.findOne({
-      donorId: donorObjectId,
-      receiverId: receiverObjectId,
-      donId: donObjectId,
+      envoye_par: senderId,
+      recu_par: receiverId,
+      don_id: donObjectId,
     });
 
     if (existing) {
@@ -29,10 +29,10 @@ exports.initiateConversation = async (req, res) => {
     }
 
     const newConv = new Conversation({
-      donorId: donorObjectId,
-      receiverId: receiverObjectId,
-      donId: donObjectId,
-      participants: [donorObjectId, receiverObjectId],
+      envoye_par: senderId,
+      recu_par: receiverId,
+      don_id: donObjectId,
+      participants: [senderId, receiverId],
       dernierMessage: {
         contenu: "",
         envoye_par: null,

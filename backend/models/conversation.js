@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const conversationSchema = new mongoose.Schema({
-  donorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  receiverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  donId: { type: mongoose.Schema.Types.ObjectId, ref: 'Don', required: true },
+  don_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Don', required: true },
+  envoye_par: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  recu_par: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   participants: [
     { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
   ],
@@ -12,8 +12,9 @@ const conversationSchema = new mongoose.Schema({
     envoye_par: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     envoye_le: Date,
   },
-}, { timestamps: true });  // <-- ça gère createdAt et updatedAt automatiquement
+}, { timestamps: true });
 
-conversationSchema.index({ donId: 1, donorId: 1, receiverId: 1 }, { unique: true });
+// 🔐 Index unique basé sur les champs renommés
+conversationSchema.index({ don_id: 1, envoye_par: 1, recu_par: 1 }, { unique: true });
 
 module.exports = mongoose.model('Conversation', conversationSchema);
