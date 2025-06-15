@@ -1,69 +1,54 @@
-const express = require('express');
-const router = express.Router();
-const Conversation = require('../models/conversation.js');
-const User = require('../models/User'); // pour récupérer pseudo/avatar
-
-// GET /api/conversations/:userId
-router.get('/:userId', async (req, res) => {
-  const userId = req.params.userId;
-
-  try {
-    // Récupérer toutes les conversations où userId est participant
-    const conversations = await Conversation.find({ participants: userId }).sort({ lastUpdated: -1 });
-
-    // Pour chaque conversation, récupérer l'autre participant et le dernier message
-    const result = await Promise.all(conversations.map(async (conv) => {
-      // Trouver l'autre participant
-      const otherUserId = conv.participants.find(id => id !== userId);
-      const otherUser = await User.findById(otherUserId);
-
-      return {
-        _id: conv._id,
-        pseudo: otherUser?.pseudo || 'Utilisateur inconnu',
-        avatar: otherUser?.avatar || 'https://via.placeholder.com/50',
-        dernierMessage: conv.messages.length > 0 ? conv.messages[conv.messages.length -1].text : "Aucun message",
-        messageInitial: conv.messages[0]?.text || null,
-      };
-    }));
-
-    res.json(result);
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+const mongoose = require('mongoose');
+const Conversation = require('../models/conversation');
 
 exports.initiateConversation = async (req, res) => {
-      console.log("Requête reçue :", req.body);
-
   const { donorId, receiverId, donId } = req.body;
-  console.log("🔍 Création conversation avec :", { donorId, receiverId, donId });
+
+  console.log("💬 [INITIATE] Donor:", donorId, "Receiver:", receiverId, "Don:", donId);
+
+  if (!donorId || !receiverId || !donId) {
+    return res.status(400).json({ message: "Champs manquants pour créer une conversation." });
+  }
 
   try {
-    // Vérifie si une conversation existe déjà
-    let existingConversation = await Conversation.findOne({
-      donorId,
-      receiverId,
-      donId
+    // Convertir les IDs en ObjectId
+    const donorObjectId = new mongoose.Types.ObjectId(donorId);
+    const receiverObjectId = new mongoose.Types.ObjectId(receiverId);
+    const donObjectId = new mongoose.Types.ObjectId(donId);
+
+    // Vérifie si une conversation existe déjà entre ces trois entités
+    let existing = await Conversation.findOne({
+      donorId: donorObjectId,
+      receiverId: receiverObjectId,
+      donId: donObjectId,
     });
 
-    if (existingConversation) {
-      return res.status(200).json(existingConversation);
+    if (existing) {
+      console.log("✅ Conversation déjà existante:", existing._id);
+      return res.status(200).json(existing);
     }
 
-    // Sinon, crée une nouvelle conversation
-    const newConversation = new Conversation({
-  donorId,
-  receiverId,
-  donId,
-  participants: [donorId, receiverId]
-});
+    const newConv = new Conversation({
+      donorId: donorObjectId,
+      receiverId: receiverObjectId,
+      donId: donObjectId,
+      participants: [donorObjectId, receiverObjectId],
+      dernierMessage: {
+        contenu: "",
+        envoye_par: null,
+        envoye_le: null,
+      },
+    });
 
-    await newConversation.save();
-    return res.status(201).json(newConversation);
+    const savedConv = await newConv.save();
+    console.log("✅ Conversation créée avec succès:", savedConv._id);
+    return res.status(201).json(savedConv);
+
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Erreur lors de l'initialisation de la conversation" });
+    console.error("❌ Erreur lors de la création de conversation :", error);
+    return res.status(500).json({
+      message: "Erreur serveur lors de la création de la conversation.",
+      error: error.message,
+    });
   }
 };
-

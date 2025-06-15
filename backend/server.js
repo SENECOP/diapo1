@@ -45,7 +45,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/dons', donRoutes);
 app.use('/api/notifications', notificationsRoutes);
-app.use("/api/conversations", conversationRoutes);
+app.use('/api', conversationRoutes);
 app.use('/api/messages', messageRoutes);
 
 app.use('/uploads', express.static('uploads'));

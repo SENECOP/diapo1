@@ -14,4 +14,6 @@ const conversationSchema = new mongoose.Schema({
   },
 }, { timestamps: true });  // <-- ça gère createdAt et updatedAt automatiquement
 
+conversationSchema.index({ donId: 1, donorId: 1, receiverId: 1 }, { unique: true });
+
 module.exports = mongoose.model('Conversation', conversationSchema);
