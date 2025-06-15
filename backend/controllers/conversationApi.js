@@ -34,6 +34,8 @@ router.get('/:userId', async (req, res) => {
 });
 
 exports.initiateConversation = async (req, res) => {
+      console.log("Requête reçue :", req.body);
+
   const { donorId, receiverId, donId } = req.body;
 
   try {

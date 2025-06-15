@@ -1,48 +1,49 @@
 import React, { useEffect, useState } from "react";
-import { FaGift } from "react-icons/fa";
+import { FaGift, FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft } from 'react-icons/fa';
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
-  const token = localStorage.getItem("token");
-  const navigate = useNavigate();
   const [selectedNotification, setSelectedNotification] = useState(null);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null); // ✅ Déclaration du token
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user || !user.token) {
-      console.log("Utilisateur non connecté, pas de récupération des notifications.");
-      return; 
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const storedToken = localStorage.getItem("token");
+
+    if (!storedUser || !storedToken) {
+      console.log("Utilisateur non connecté. Redirection...");
+      navigate("/login"); // ou autre route
+      return;
     }
+
+    setUser(storedUser);
+    setToken(storedToken);
 
     const fetchNotifications = async () => {
       try {
         const response = await fetch("https://diapo-app.onrender.com/api/notifications", {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${storedToken}`,
           },
         });
 
         if (!response.ok) throw new Error("Erreur lors du chargement des notifications");
 
         const data = await response.json();
-        if (Array.isArray(data.notifications)) {
-          setNotifications(data.notifications);
-        } else {
-          setNotifications([]);
-        }
+        setNotifications(Array.isArray(data.notifications) ? data.notifications : []);
       } catch (error) {
         console.error("Erreur chargement notifications :", error.message);
       }
     };
 
-    if (token) {
-      fetchNotifications();
-    }
-  }, [token]);
+    fetchNotifications();
+  }, [navigate]);
 
   const markAsRead = async (notificationId) => {
     try {
@@ -62,22 +63,60 @@ const NotificationPage = () => {
     }
   };
 
+  const handleContactClick = async () => {
+    if (!user || !selectedNotification) {
+      console.error("Utilisateur ou notification non sélectionné");
+      return;
+    }
+
+    const donorId = selectedNotification.don?.user?._id || selectedNotification.don?.user;
+const receiverId = user._id;
+const donId = selectedNotification.don?._id;
+
+    if (!donorId || !receiverId || !donId) {
+      console.error("Données manquantes pour créer une conversation :", { donorId, receiverId, donId });
+      return;
+    }
+
+    try {
+      console.log("Données conversation :", { donorId, receiverId, donId });
+
+      const response = await fetch("https://diapo-app.onrender.com/api/conversations/initiate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          participants: [donorId, receiverId],
+          don: donId,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Erreur lors de la création de la conversation");
+
+      const conversation = await response.json();
+      navigate(`/messagerie/${conversation._id}`);
+    } catch (error) {
+      console.error("Erreur lors de la redirection vers la messagerie :", error);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <div className="bg-blue-700 text-white px-10 py-10 flex items-center h-[250px] space-x-4">
-         <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="p-2 rounded-full bg-white text-blue-700 hover:bg-gray-100 shadow"
-              title="Retour au tableau de bord"
-            >
-              <FaArrowLeft />
-            </button>
-            <h1 className="text-3xl font-semibold">Notifications</h1>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="p-2 rounded-full bg-white text-blue-700 hover:bg-gray-100 shadow"
+            title="Retour au tableau de bord"
+          >
+            <FaArrowLeft />
+          </button>
+          <h1 className="text-3xl font-semibold">Notifications</h1>
         </div>
-      
       </div>
 
       <div className="flex flex-1">
@@ -92,16 +131,14 @@ const NotificationPage = () => {
               notifications.map((notification) => (
                 <div
                   key={notification._id}
-                  className={`bg-white rounded-md shadow-sm p-3 mb-2 flex items-start justify-between hover:bg-blue-50 cursor-pointer ${
-                      notification.vu ? 'opacity-50' : 'opacity-100'
-                    }`}                  
-                    onClick={async () => {
-                      await markAsRead(notification._id);
-                      setNotifications(prev =>
-                        prev.map(n => n._id === notification._id ? { ...n, vu: true } : n)
-                      );
-                      setSelectedNotification(notification);
-                    }}
+                  className={`bg-white rounded-md shadow-sm p-3 mb-2 flex items-start justify-between hover:bg-blue-50 cursor-pointer ${notification.vu ? 'opacity-50' : 'opacity-100'}`}
+                  onClick={async () => {
+                    await markAsRead(notification._id);
+                    setNotifications(prev =>
+                      prev.map(n => n._id === notification._id ? { ...n, vu: true } : n)
+                    );
+                    setSelectedNotification(notification);
+                  }}
                 >
                   <div className="flex gap-2">
                     <div className="p-2 bg-gray-200 rounded-full">
@@ -127,14 +164,14 @@ const NotificationPage = () => {
           </div>
         </div>
 
-        <div className="flex-1 p-6 bg-white ">
+        <div className="flex-1 p-6 bg-white">
           <h2 className="text-xl font-bold mb-4">Détail du Don</h2>
           {selectedNotification ? (
             <div>
               <img
                 src={
-                  selectedNotification.don?.url_image?.[0] || 
-                  "https://via.placeholder.com/150"
+                  selectedNotification.don?.url_image?.[0] ||
+                  "https://placehold.co/150x150?text=Image"
                 }
                 alt="Don"
                 className="w-48 h-48 object-cover rounded mb-4"
@@ -155,36 +192,11 @@ const NotificationPage = () => {
               </p>
 
               <button
-  onClick={async () => {
-    const notif = selectedNotification;
-    const donId = notif.don?._id;
-    const donorId = JSON.parse(localStorage.getItem("user"))?._id;
-    const receiverId = notif.emetteur?._id;
-
-    try {
-      const response = await fetch("https://diapo-app.onrender.com/api/conversations/initiate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ donorId, receiverId, donId }),
-      });
-
-      if (!response.ok) throw new Error("Erreur lors de la création de la conversation");
-
-      const conversation = await response.json();
-
-      navigate(`/messagerie/${conversation._id}`);
-    } catch (error) {
-      console.error("Erreur lors de la redirection vers la messagerie :", error);
-    }
-  }}
-  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
->
-  Contacter
-</button>
-
+                onClick={handleContactClick}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Contacter
+              </button>
             </div>
           ) : (
             <p>Sélectionnez une notification pour voir le détail du don.</p>

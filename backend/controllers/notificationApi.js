@@ -28,8 +28,16 @@ const getNotifications = async (req, res) => {
     // Récupérer les notifications du destinataire (utilisateur connecté)
     const notifications = await Notification.find({ destinataire: req.user._id })
       .populate("emetteur", "pseudo avatar") 
-      .populate("don", "titre") 
-      .sort({ createdAt: -1 });
+.populate({
+  path: "don",
+  select: "titre user",
+  populate: {
+    path: "user",
+    select: "pseudo avatar"
+  }
+})
+      
+.sort({ createdAt: -1 });
 
     res.status(200).json({ notifications: notifications || [] });
   } catch (error) {
