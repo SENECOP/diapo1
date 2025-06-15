@@ -68,20 +68,21 @@ io.on('connection', (socket) => {
   // Rejoindre une room basée sur le don_id (conversation)
   socket.on('joinRoom', (roomId) => {
     socket.join(roomId);
-    console.log(`📦 Socket ${socket.id} a rejoint la room ${roomId}`);
+console.log(`📦 Socket ${socket.id} a rejoint la room ${roomId}`);
+console.log(`🚀 Serveur démarré sur le port ${PORT}`);
   });
 
   // Envoi de message
   socket.on('sendMessage', async (data) => {
-    const { contenu, envoye_par, recu_par, don_id } = data;
+  const { texte, envoye_par, recu_par, conversationId } = data;
 
-    // Sauvegarder le message en base de données
-    const message = new Message({ contenu, envoye_par, recu_par, don_id });
-    const savedMessage = await message.save();
+const message = new Message({ texte, envoye_par, recu_par, conversationId });
+const savedMessage = await message.save();
 
-    // Émettre à tous dans la room (don_id) sauf l'envoyeur
-    io.to(don_id).emit('receiveMessage', savedMessage);
-  });
+io.to(conversationId).emit('receiveMessage', savedMessage);
+
+});
+
 
   socket.on('disconnect', () => {
     console.log('🔴 Un utilisateur s\'est déconnecté :', socket.id);

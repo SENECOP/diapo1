@@ -101,7 +101,7 @@ const donId = selectedNotification.don?._id;
       if (!response.ok) throw new Error("Erreur lors de la création de la conversation");
 
       const conversation = await response.json();
-navigate(`/messagerie/${conversation._id}`, {
+navigate(`/messages/conversation/${conversation._id}`, {
   state: {
     conversationId: conversation._id,
     user: conversation.participants.find(p => p._id !== user._id),
