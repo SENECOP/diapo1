@@ -1,15 +1,23 @@
-// controllers/messageController.js
+// controllers/messageApi.js
 const Message = require('../models/Message');
 
-exports.getMessagesByConversation = async (req, res) => {
+exports.createMessage = async (req, res) => {
   try {
-    const { conversationId } = req.params;
-    const messages = await Message.find({ conversationId })
-      .sort({ envoye_le: 1 })
-      .populate("envoye_par recu_par");
+    const { conversationId, texte, envoye_par, recu_par } = req.body;
 
-    res.status(200).json(messages);
+    const newMessage = new Message({
+      conversationId,
+      texte,
+      envoye_par,
+      recu_par,
+      envoye_le: Date.now(),
+    });
+
+    await newMessage.save();
+
+    res.status(201).json(newMessage);
   } catch (err) {
-    res.status(500).json({ error: "Erreur serveur lors du chargement des messages" });
+    console.error(err);
+    res.status(500).json({ error: "Erreur lors de l'envoi du message" });
   }
 };
