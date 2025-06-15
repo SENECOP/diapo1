@@ -70,7 +70,10 @@ const NotificationPage = () => {
     }
 
     const donorId = selectedNotification.don?.user?._id || selectedNotification.don?.user;
-const receiverId = user._id;
+const receiverId =
+  typeof selectedNotification.emetteur === "string"
+    ? selectedNotification.emetteur
+    : selectedNotification.emetteur?._id;
 const donId = selectedNotification.don?._id;
 
     if (!donorId || !receiverId || !donId) {
@@ -79,7 +82,7 @@ const donId = selectedNotification.don?._id;
     }
 
     try {
-      console.log("Données conversation :", { donorId, receiverId, donId });
+      console.log("Envoi des données :", { donorId, receiverId, donId });
 
       const response = await fetch("https://diapo-app.onrender.com/api/conversations/initiate", {
         method: "POST",
