@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
-
 import ConversationList from '../components/messages/ConversationList';
 import MessageBox from '../components/messages/MessageBox';
 import AlerteReservation from "../components/AlerteReservation";
@@ -35,7 +34,7 @@ const { user} = location.state || {};
 
   const fetchConversation = async () => {
     try {
-      const response = await fetch(`https://diapo-app.onrender.com/api/conversations/id/${conversationId}`, {
+      const response = await fetch(`https://diapo-app.onrender.com/api/conversations`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         }
@@ -102,7 +101,7 @@ useEffect(() => {
 
       <div className="flex h-screen">
         {/* Liste des conversations à gauche */}
-        <ConversationList conversations={conversations} currentUser={currentUser} />
+        <ConversationList conversations={conversations} />
 
         {/* Zone des messages à droite */}
         {conversation ? (

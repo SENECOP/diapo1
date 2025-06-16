@@ -69,8 +69,11 @@ const Header = () => {
   return (
     <header className="bg-white shadow p-3 flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <img src="/logo_diapo.png" alt="Diapo Logo" className="h-16 w-auto" />
+        <Link to="/dashboard">
+          <img src="/logo_diapo.png" alt="Diapo Logo" className="h-16 w-auto cursor-pointer" />
+        </Link>
       </div>
+
 
       <div className="flex items-center gap-2 flex-1 max-w-3xl mx-4 relative">
         <input
