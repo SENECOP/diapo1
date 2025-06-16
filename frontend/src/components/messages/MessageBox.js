@@ -7,21 +7,16 @@ export default function MessageBox({ user, messageInitial, conversationId: don_i
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    if (!don_id) return;
+  if (!don_id) return;
 
-    // 🔗 Connexion à la room spécifique au don
-    socket.emit('joinRoom', don_id);
+  socket.emit('joinRoom', don_id);
 
-    // 🎧 Ecoute des messages entrants
-    socket.on('receiveMessage', (message) => {
-      setMessages((prev) => [...prev, message]);
-    });
+  return () => {
+    socket.emit('leaveRoom', don_id); // Ajoute ça !
+    socket.off('receiveMessage');
+  };
+}, [don_id]);
 
-    // Nettoyage lors du démontage
-    return () => {
-      socket.off('receiveMessage');
-    };
-  }, [don_id]);
 
   const handleSendMessage = (contenu) => {
     if (!contenu || !currentUser || !user || !don_id) return;
@@ -43,7 +38,7 @@ export default function MessageBox({ user, messageInitial, conversationId: don_i
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/messages/${don_id}`);
+        const response = await fetch(`https://diapo-app.onrender.com/api/messages/${don_id}`);
         const data = await response.json();
         setMessages(data);
       } catch (error) {
@@ -71,18 +66,21 @@ export default function MessageBox({ user, messageInitial, conversationId: don_i
       {/* Zone des messages */}
       <div className="flex-1 p-4 overflow-y-auto bg-gray-50 space-y-2">
         {/* Message initial */}
-        {messageInitial && (
-          <div className="mb-2 flex justify-start">
-            <div className="bg-gray-200 rounded-lg p-2 max-w-xs">
-              <img
-                src={messageInitial.image}
-                alt="don"
-                className="w-32 h-32 object-cover rounded mb-2"
-              />
-              <p className="text-sm">{messageInitial.description}</p>
-            </div>
-          </div>
-        )}
+       {messageInitial && typeof messageInitial === 'object' && (
+      <div className="mb-2 flex justify-start">
+        <div className="bg-gray-200 rounded-lg p-2 max-w-xs">
+          {messageInitial.image && (
+            <img
+              src={messageInitial.image}
+              alt="don"
+              className="w-32 h-32 object-cover rounded mb-2"
+            />
+          )}
+          <p className="text-sm">{messageInitial.description}</p>
+        </div>
+      </div>
+    )}
+
 
         {/* Historique messages */}
         {messages.map((msg, index) => (

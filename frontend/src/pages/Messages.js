@@ -52,6 +52,29 @@ const { user} = location.state || {};
   fetchConversation();
 }, [conversationId]);
 
+useEffect(() => {
+  const fetchUserConversations = async () => {
+    try {
+      const res = await fetch(`https://diapo-app.onrender.com/api/conversations/${currentUser._id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        }
+      });
+
+      if (!res.ok) throw new Error("Erreur récupération des conversations");
+
+      const data = await res.json();
+      setConversations(data);
+    } catch (err) {
+      console.error("❌ Erreur fetchUserConversations :", err);
+    }
+  };
+
+  if (currentUser?._id) {
+    fetchUserConversations();
+  }
+}, [currentUser]);
+
 
 useEffect(() => {
   if (conversationId && user) {
@@ -100,8 +123,8 @@ useEffect(() => {
       {showAlert && <AlerteReservation onClose={() => setShowAlert(false)} />}
 
       <div className="flex h-screen">
-        {/* Liste des conversations à gauche */}
-        <ConversationList conversations={conversations} />
+        {/* Liste des conversations à gauche */}  
+        <ConversationList conversations={conversations} currentUser={currentUser} />
 
         {/* Zone des messages à droite */}
         {conversation ? (

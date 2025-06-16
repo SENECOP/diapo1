@@ -5,8 +5,8 @@ export default function ConversationList({ conversations = [], currentUser }) {
 
   const getInterlocutorInfo = (conv) => {
     // Déterminer qui est l'interlocuteur (l'autre personne que l'utilisateur courant)
-    const isCurrentUserDonor = conv.donorId?._id === currentUser._id;
-    const interlocutor = isCurrentUserDonor ? conv.receiverId : conv.donorId;
+    const isCurrentUserSender = conv.envoye_par?._id === currentUser._id;
+    const interlocutor = isCurrentUserSender ? conv.recu_par : conv.envoye_par;
 
     return {
       pseudo: interlocutor?.pseudo || "Utilisateur inconnu",
