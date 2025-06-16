@@ -4,16 +4,23 @@ export default function ConversationList({ conversations = [], currentUser }) {
   const navigate = useNavigate();
 
   const getInterlocutorInfo = (conv) => {
-    // Déterminer qui est l'interlocuteur (l'autre personne que l'utilisateur courant)
-    const isCurrentUserSender = conv.envoye_par?._id === currentUser._id;
-    const interlocutor = isCurrentUserSender ? conv.recu_par : conv.envoye_par;
+  if (!currentUser) {
+    console.warn("currentUser non défini");
+    return { pseudo: "Utilisateur inconnu", avatar: "", _id: null };
+  }
 
-    return {
-      pseudo: interlocutor?.pseudo || "Utilisateur inconnu",
-      avatar: interlocutor?.avatar || "https://via.placeholder.com/50",
-      _id: interlocutor?._id || null,
-    };
+  console.log("Conversation:", conv);
+
+  const isCurrentUserSender = conv.envoye_par?._id === currentUser._id;
+  const interlocutor = isCurrentUserSender ? conv.recu_par : conv.envoye_par;
+
+  return {
+    pseudo: interlocutor?.pseudo || "Utilisateur inconnu",
+    avatar: interlocutor?.avatar || "https://via.placeholder.com/50",
+    _id: interlocutor?._id || null,
   };
+};
+
 
   return (
     <div className="w-1/3 bg-white border-r p-4 overflow-y-auto">

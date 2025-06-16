@@ -3,11 +3,13 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import ConversationList from '../components/messages/ConversationList';
 import MessageBox from '../components/messages/MessageBox';
+import Footer from "../components/Footer";
 import AlerteReservation from "../components/AlerteReservation";
 import Header from '../components/Header';
 
 const Message = () => {
   const currentUser = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
 
   const [showAlert, setShowAlert] = useState(false);
   const [conversations, setConversations] = useState([]);
@@ -15,93 +17,100 @@ const Message = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { id: conversationId } = useParams(); // Récupère l'ID de la conversation depuis l'URL
-const { user} = location.state || {};
+  const { id: conversationId } = useParams();
 
   const receiver = location.state?.user;
   const messageInitial = location.state?.messageInitial || "";
 
-  // Gérer l’alerte de réservation
+  // Afficher une alerte si besoin
   useEffect(() => {
     if (location.state?.showReservationAlert) {
       setShowAlert(true);
     }
   }, [location.state]);
 
+  // Charger la conversation sélectionnée
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const fetchConversation = async () => {
+      try {
+        const response = await fetch(`https://diapo-app.onrender.com/api/conversations/id/${conversationId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        });
+
+        if (!response.ok) throw new Error("Erreur lors du chargement de la conversation");
+
+        const data = await response.json();
+        setConversation(data);
+      } catch (error) {
+        console.error("❌ Erreur récupération conversation :", error);
+      }
+    };
+
+    fetchConversation();
+  }, [conversationId, token]);
+
   // Charger toutes les conversations de l'utilisateur
   useEffect(() => {
-  if (!conversationId) return;
-
-  const fetchConversation = async () => {
+  const fetchConversations = async () => {
     try {
-      const response = await fetch(`https://diapo-app.onrender.com/api/conversations`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        }
-      });
+      const token = localStorage.getItem('token');
+      if (!token || !currentUser?._id) {
+        console.error("Token ou currentUser manquant");
+        return;
+      }
 
-      if (!response.ok) throw new Error("Erreur lors du chargement de la conversation");
+      const response = await fetch(`https://diapo-app.onrender.com/api/conversations/${currentUser._id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
-      setConversation(data.conversation); // <-- ici aussi, prendre la propriété conversation
-    } catch (error) {
-      console.error("❌ Erreur récupération conversation :", error);
-    }
-  };
-
-  fetchConversation();
-}, [conversationId]);
-
-useEffect(() => {
-  const fetchUserConversations = async () => {
-    try {
-      const res = await fetch(`https://diapo-app.onrender.com/api/conversations/${currentUser._id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        }
-      });
-
-      if (!res.ok) throw new Error("Erreur récupération des conversations");
-
-      const data = await res.json();
+      console.log("📦 Conversations récupérées :", data); // 👈 ajoute ceci
       setConversations(data);
-    } catch (err) {
-      console.error("❌ Erreur fetchUserConversations :", err);
+    } catch (error) {
+      console.error("Erreur lors du chargement des conversations", error);
     }
   };
 
   if (currentUser?._id) {
-    fetchUserConversations();
+    fetchConversations();
   }
 }, [currentUser]);
 
 
-useEffect(() => {
-  if (conversationId && user) {
-    const exists = conversations.some(c => c._id === conversationId);
 
-    if (!exists) {
-      const fetchNewConversation = async () => {
-        try {
-          const res = await fetch(`https://diapo-app.onrender.com/api/conversations/id/${conversationId}`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            }
-          });
+  // Ajouter une nouvelle conversation localement si elle n'existe pas déjà
+  useEffect(() => {
+    if (conversationId && receiver) {
+      const exists = conversations.some(c => c._id === conversationId);
 
-          if (!res.ok) throw new Error("Échec récupération conversation");
+      if (!exists) {
+        const fetchNewConversation = async () => {
+          try {
+            const res = await fetch(`https://diapo-app.onrender.com/api/conversations/id/${conversationId}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              }
+            });
 
-          const data = await res.json();
-          setConversations(prev => [data.conversation, ...prev]); // <-- et ici aussi
-        } catch (err) {
-          console.error("❌ Erreur fetchNewConversation :", err);
-        }
-      };
+            if (!res.ok) throw new Error("Échec récupération conversation");
 
-      fetchNewConversation();
+            const data = await res.json();
+            setConversations(prev => [data, ...prev]);
+          } catch (err) {
+            console.error("❌ Erreur fetchNewConversation :", err);
+          }
+        };
+
+        fetchNewConversation();
+      }
     }
-  }
-}, [conversationId, user, conversations]);
+  }, [conversationId, receiver, conversations, token]);
 
   return (
     <div className="p-4">
@@ -123,10 +132,10 @@ useEffect(() => {
       {showAlert && <AlerteReservation onClose={() => setShowAlert(false)} />}
 
       <div className="flex h-screen">
-        {/* Liste des conversations à gauche */}  
+        {/* Liste des conversations */}
         <ConversationList conversations={conversations} currentUser={currentUser} />
 
-        {/* Zone des messages à droite */}
+        {/* Zone de messages */}
         {conversation ? (
           <MessageBox
             user={receiver}
@@ -141,6 +150,8 @@ useEffect(() => {
           </div>
         )}
       </div>
+
+      <Footer />
     </div>
   );
 };
