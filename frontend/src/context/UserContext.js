@@ -1,10 +1,10 @@
-// context/UserContext.js
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
 
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [conversations, setConversations] = useState([]);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -23,12 +23,15 @@ export const UserProvider = ({ children }) => {
 
   const updateUser = (newData) => {
     setUser(newData);
-    localStorage.setItem('userConnected', JSON.stringify(newData));
+    localStorage.setItem("user", JSON.stringify(newData)); // corrige ici aussi le nom "user" au lieu de "userConnected"
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout, updateUser }}>
+    <UserContext.Provider value={{ user, login, logout, updateUser, conversations, setConversations }}>
       {children}
     </UserContext.Provider>
   );
 };
+
+// Hook personnalisé pour utiliser le contexte facilement
+export const useUserContext = () => useContext(UserContext);

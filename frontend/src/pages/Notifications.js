@@ -65,49 +65,58 @@ const NotificationPage = () => {
   console.log("User state:", user)
 
   const handleContactClick = async () => {
-    if (!user || !selectedNotification) {
-      console.error("Utilisateur ou notification non sélectionné");
-      return;
-    }
+  if (!user || !selectedNotification) {
+    console.error("Utilisateur ou notification non sélectionné");
+    return;
+  }
 
+  try {
     const don_id = selectedNotification.don?._id;
     const envoye_par = user.id || user._id;
-    const recu_par = typeof selectedNotification.emetteur === "string"
-      ? selectedNotification.emetteur
-      : selectedNotification.emetteur?._id;
+    const recu_par = selectedNotification.emetteur?._id || selectedNotification.emetteur;
 
     if (!envoye_par || !recu_par || !don_id) {
-      console.error("Données manquantes pour créer une conversation :", { envoye_par, recu_par, don_id });
+      console.error("Données manquantes:", { envoye_par, recu_par, don_id });
       return;
     }
 
-    try {
-      console.log("📨 Données envoyées :", { envoye_par, recu_par, don_id });
+    console.log("Tentative de création de conversation avec:", { envoye_par, recu_par, don_id });
 
-      const response = await fetch("https://diapo-app.onrender.com/api/conversations/initiate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ envoye_par, recu_par, don_id }),
-      });
+    const response = await fetch("https://diapo-app.onrender.com/api/conversations/initiate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ 
+        envoye_par, 
+        recu_par, 
+        don_id 
+      }),
+    });
 
-      if (!response.ok) throw new Error("Erreur lors de la création de la conversation");
-
-      const conversation = await response.json();
-
-      navigate(`/messages`, {
-        state: {
-          conversationId: conversation._id,
-          user: conversation.participants.find(p => p._id !== user._id),
-          messageInitial: ""
-        }
-      });
-    } catch (error) {
-      console.error("Erreur lors de la redirection vers la messagerie :", error);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || "Erreur lors de la création de la conversation");
     }
-  };
+
+    navigate(`/message/${data._id}`, {
+      state: {
+        conversationId: data._id,
+        interlocuteur: data.participants.find(p => p._id !== user._id),
+        don: data.don_id
+      }
+    });
+
+  } catch (error) {
+    console.error("Erreur complète:", {
+      message: error.message,
+      stack: error.stack
+    });
+    alert(`Échec de la création de la conversation: ${error.message}`);
+  }
+};
 
   return (
     <div className="min-h-screen flex flex-col">

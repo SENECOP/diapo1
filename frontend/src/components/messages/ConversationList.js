@@ -7,50 +7,51 @@ export default function ConversationList({ conversations = [], currentUser }) {
     <div className="w-1/3 bg-white border-r p-4 overflow-y-auto">
       <h2 className="text-xl font-bold mb-4">Conversations</h2>
 
-      <ul>
-        {conversations.length === 0 ? (
-          <p className="text-gray-500">Aucune conversation</p>
-        ) : (
-          conversations.map((conv) => {
-            // 🔐 Vérification sécurisée
-            const otherUser =
-              Array.isArray(conv.participants) &&
-              conv.participants.find((user) => user._id !== currentUser._id);
+      {conversations.length === 0 ? (
+        <p className="text-gray-500">Aucune conversation</p>
+      ) : (
+        <ul>
+          {conversations.map((conv) => (
+            <li
+              key={conv._id}
+              className="p-4 mb-2 border rounded hover:bg-gray-100 cursor-pointer flex items-center space-x-4"
+              onClick={() =>
+                navigate(`/message/${conv._id}`, {
+                  state: {
+                    user: {
+                      pseudo: conv.interlocuteur || "Preneur inconnu",
+                      avatar: conv.avatar || "https://via.placeholder.com/50",
+                      _id: null, // facultatif : à ajouter côté backend si besoin
+                    },
+                    messageInitial: "",
+                  },
+                })
+              }
+            >
+              <img
+                src={conv.avatar || "https://via.placeholder.com/50"}
+                alt="avatar"
+                className="w-10 h-10 rounded-full object-cover"
+              />
 
-            return (
-              <li
-                key={conv._id}
-                className="p-2 border-b hover:bg-gray-100 cursor-pointer"
-           onClick={() => {
-            const otherUser = conv.participants?.find(u => u._id !== currentUser._id);
-
-            navigate("/message", {
-              state: {
-                conversationId: conv._id,
-                user: {
-                  _id: otherUser?._id,
-                  pseudo: otherUser?.pseudo || "Preneur inconnu",
-                  avatar: otherUser?.avatar || "https://via.placeholder.com/50",
-                },
-                currentUser,
-                don_id: conv.don_id || null,
-              },
-            });
-          }}
-
-
-              >
-                <div className="font-semibold">
-                  {otherUser?.pseudo || "Preneur inconnu"}
-                </div>
+              <div className="flex-1">
+                <div className="font-semibold">{conv.interlocuteur}</div>
                 <div className="text-sm text-gray-500 truncate">
-                  {conv.dernierMessage?.contenu || "Aucun message"}
+                  {conv.description || "Aucun message"}
                 </div>
-              </li>
-            );
-          })
-        )}
-      </ul>
+              </div>
+
+              {conv.image && (
+                <img
+                  src={conv.image}
+                  alt="don"
+                  className="w-12 h-12 object-cover rounded"
+                />
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
