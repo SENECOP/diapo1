@@ -1,4 +1,5 @@
 const Message = require('../models/Message');
+const Conversation = require('../models/conversation');
 
 exports.createMessage = async (req, res) => {
   try {
@@ -13,12 +14,23 @@ exports.createMessage = async (req, res) => {
     });
 
     await newMessage.save();
+
+    // 🔄 Mettre à jour le dernier message dans la conversation
+    await Conversation.findByIdAndUpdate(conversationId, {
+      dernierMessage: {
+        contenu: texte,
+        envoye_par,
+        envoye_le: new Date(),
+      },
+    });
+
     res.status(201).json(newMessage);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Erreur lors de l'envoi du message" });
   }
 };
+
 
 // ✅ AJOUTE CETTE FONCTION :
 exports.getMessagesByConversation = async (req, res) => {

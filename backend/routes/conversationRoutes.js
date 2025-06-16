@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Conversation = require('../models/conversation');
 const { initiateConversation } = require('../controllers/conversationApi');
 const verifyToken = require('../middlewares/authMiddleware');
 
 // Récupération des conversations d'un utilisateur
-router.get("/conversations/:userId", async (req, res) => {
+router.get("/conversations/:userId", verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
 

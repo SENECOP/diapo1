@@ -48,7 +48,7 @@ export default function ConversationList({ conversations = [], currentUser }) {
                 <div className="flex-1">
                   <div className="font-semibold">{interlocutor.pseudo}</div>
                   <div className="text-sm text-gray-500 truncate">
-                    {conv.lastMessage || "Aucun message"}
+                    {conv.dernierMessage?.contenu || "Aucun message"}
                   </div>
                 </div>
 

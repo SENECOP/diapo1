@@ -46,7 +46,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dons', donRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api', conversationRoutes);
-app.use('/api/messages', messageRoutes);
+app.use('/api/message', messageRoutes);
 
 app.use('/uploads', express.static('uploads'));
 //app.options('*', cors());
