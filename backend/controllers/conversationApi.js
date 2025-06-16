@@ -17,9 +17,9 @@ exports.initiateConversation = async (req, res) => {
 
     // Recherche d'une conversation existante avec les bons noms de champs du schéma
     const conversationExistante = await Conversation.findOne({
-      donorId: envoye_par,
-      receiverId: recu_par,
-      donId: don_id,
+      envoye_par,
+      recu_par,
+      don_id,
     });
 
     if (conversationExistante) {
@@ -29,9 +29,10 @@ exports.initiateConversation = async (req, res) => {
 
     // Création d'une nouvelle conversation avec les noms de champs corrects
     const nouvelleConversation = new Conversation({
-      donorId: envoye_par,
-      receiverId: recu_par,
-      donId: don_id,
+       envoye_par,
+        recu_par,
+        don_id,
+        participants: [envoye_par, recu_par],
     });
 
     const conversationSauvegardee = await nouvelleConversation.save();

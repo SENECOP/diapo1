@@ -71,6 +71,9 @@ const NotificationPage = () => {
   }
 
   try {
+    console.log("selectedNotification complet :", selectedNotification);
+
+
     const don_id = selectedNotification.don?._id;
     const envoye_par = user.id || user._id;
     const recu_par = selectedNotification.emetteur?._id || selectedNotification.emetteur;
@@ -101,13 +104,16 @@ const NotificationPage = () => {
       throw new Error(data.message || "Erreur lors de la création de la conversation");
     }
 
-    navigate(`/message/${data._id}`, {
+    const conversation = data.conversation;
+
+    navigate("/message", {
       state: {
-        conversationId: data._id,
-        interlocuteur: data.participants.find(p => p._id !== user._id),
-        don: data.don_id
+        conversationId: conversation._id,
+        interlocuteur: conversation.participants.find(p => p._id !== user._id),
+        don: conversation.don_id
       }
     });
+
 
   } catch (error) {
     console.error("Erreur complète:", {
