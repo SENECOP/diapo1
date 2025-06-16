@@ -9,7 +9,6 @@ import Header from '../components/Header';
 
 const Message = () => {
   const currentUser = JSON.parse(localStorage.getItem("user"));
-  const userId = currentUser?._id;
 
   const [showAlert, setShowAlert] = useState(false);
   const [conversations, setConversations] = useState([]);
@@ -32,58 +31,34 @@ const { user} = location.state || {};
 
   // Charger toutes les conversations de l'utilisateur
   useEffect(() => {
-    if (!userId) return;
+  if (!conversationId) return;
 
-    const fetchConversations = async () => {
-      try {
-        const response = await fetch(`https://diapo-app.onrender.com/api/conversations/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          }
-        });
+  const fetchConversation = async () => {
+    try {
+      const response = await fetch(`https://diapo-app.onrender.com/api/conversations/id/${conversationId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        }
+      });
 
-        if (!response.ok) throw new Error("Erreur lors du chargement des conversations");
+      if (!response.ok) throw new Error("Erreur lors du chargement de la conversation");
 
-        const data = await response.json();
-        setConversations(data);
-      } catch (error) {
-        console.error("❌ Erreur récupération conversations :", error);
-      }
-    };
+      const data = await response.json();
+      setConversation(data.conversation); // <-- ici aussi, prendre la propriété conversation
+    } catch (error) {
+      console.error("❌ Erreur récupération conversation :", error);
+    }
+  };
 
-    fetchConversations();
-  }, [userId]);
+  fetchConversation();
+}, [conversationId]);
 
-  // Charger la conversation demandée par l'URL
-  useEffect(() => {
-    if (!conversationId) return;
-
-    const fetchConversation = async () => {
-      try {
-        const response = await fetch(`https://diapo-app.onrender.com/api/conversations/id/${conversationId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          }
-        });
-
-        if (!response.ok) throw new Error("Erreur lors du chargement de la conversation");
-
-        const data = await response.json();
-        setConversation(data);
-      } catch (error) {
-        console.error("❌ Erreur récupération conversation :", error);
-      }
-    };
-
-    fetchConversation();
-  }, [conversationId]);
 
 useEffect(() => {
   if (conversationId && user) {
     const exists = conversations.some(c => c._id === conversationId);
 
     if (!exists) {
-      // Requête pour récupérer la vraie conversation depuis l'API
       const fetchNewConversation = async () => {
         try {
           const res = await fetch(`https://diapo-app.onrender.com/api/conversations/id/${conversationId}`, {
@@ -95,7 +70,7 @@ useEffect(() => {
           if (!res.ok) throw new Error("Échec récupération conversation");
 
           const data = await res.json();
-          setConversations(prev => [data, ...prev]);
+          setConversations(prev => [data.conversation, ...prev]); // <-- et ici aussi
         } catch (err) {
           console.error("❌ Erreur fetchNewConversation :", err);
         }
@@ -105,7 +80,6 @@ useEffect(() => {
     }
   }
 }, [conversationId, user, conversations]);
-
 
   return (
     <div className="p-4">
