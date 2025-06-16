@@ -31,32 +31,45 @@ useEffect(() => {
         }
       );
 
-      const notifications = res.data.notifications || [];
+      const notifications = (res.data.notifications || []).filter(n => !n.vu);
 
-      if (notifications.length > 0) {
-        notifications.forEach((notif) => {
-          toast.info(
-            ({ closeToast }) => (
-              <NotificationCard
-                titre="Intérêt pour un Don"
-                message={notif.message}
-                onVoir={() => {
-                  closeToast();
-                  window.location.href = `/notifications`;
-                }}
-                onIgnorer={closeToast}
-              />
-            ),
-            {
-              position: "top-right",
-              autoClose: false,
-              closeOnClick: false,
-              draggable: false,
-            }
-          );
-        });
-        sessionStorage.setItem("notificationsShown", "true");
+if (notifications.length > 0) {
+  notifications.forEach((notif) => {
+    toast.info(
+      ({ closeToast }) => (
+        <NotificationCard
+          titre="Intérêt pour un Don"
+          message={notif.message}
+          onVoir={async () => {
+  try {
+    const token = localStorage.getItem("token");
+    await axios.patch(
+      `https://diapo-app.onrender.com/api/notifications/read/${notif._id}`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${token}` }
       }
+    );
+    closeToast();
+    window.location.href = `/notifications`;
+  } catch (err) {
+    console.error("Erreur lors de la mise à jour de la notification :", err);
+  }
+}}
+
+          onIgnorer={closeToast}
+        />
+      ),
+      {
+        position: "top-right",
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+      }
+    );
+  });
+  sessionStorage.setItem("notificationsShown", "true");
+}
 
       setHasFetchedNotifications(true);
     } catch (err) {
