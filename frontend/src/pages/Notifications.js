@@ -100,9 +100,9 @@ const NotificationPage = () => {
 
     const data = await response.json();
     
-    if (!response.ok) {
-      throw new Error(data.message || "Erreur lors de la création de la conversation");
-    }
+    if (!data.conversation) {
+  throw new Error("Aucune conversation renvoyée par le serveur.");
+}
 
     const conversation = data.conversation;
 

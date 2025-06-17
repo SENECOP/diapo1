@@ -16,16 +16,14 @@ exports.initiateConversation = async (req, res) => {
     }
 
     // Recherche d'une conversation existante avec les bons noms de champs du schéma
-    const conversationExistante = await Conversation.findOne({
-      envoye_par,
-      recu_par,
-      don_id,
-    });
+    const existingConversation = await Conversation.findOne({
+  don_id,
+  participants: { $all: [envoye_par, recu_par] }
+}).populate("participants don_id");
 
-    if (conversationExistante) {
-      console.log("🔁 Conversation déjà existante");
-      return res.status(200).json({ conversation: conversationExistante });
-    }
+if (existingConversation) {
+  return res.status(200).json({ conversation: existingConversation });
+}
 
     // Création d'une nouvelle conversation avec les noms de champs corrects
     const nouvelleConversation = new Conversation({
@@ -34,6 +32,8 @@ exports.initiateConversation = async (req, res) => {
         don_id,
         participants: [envoye_par, recu_par],
     });
+
+    const populatedConversation = await nouvelleConversation.populate("participants don_id");
 
     const conversationSauvegardee = await nouvelleConversation.save();
     console.log("✅ Nouvelle conversation sauvegardée :", conversationSauvegardee);

@@ -2,9 +2,10 @@ import { useNavigate } from "react-router-dom";
 
 export default function ConversationList({ conversations = [], currentUser }) {
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   const getInterlocutorInfo = (conv) => {
-  if (!currentUser) {
+  if (!token || !currentUser?._id) {
     console.warn("currentUser non défini");
     return { pseudo: "Utilisateur inconnu", avatar: "", _id: null };
   }
