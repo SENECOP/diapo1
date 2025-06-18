@@ -92,6 +92,8 @@ const NotificationPage = () => {
     });
 
     const data = await response.json();
+    console.log("🔁 Résultat de /initiate :", data); // 👈 ajoute ceci
+
 
     if (!data.conversation) {
       throw new Error("Aucune conversation renvoyée par le serveur.");
@@ -105,8 +107,8 @@ const NotificationPage = () => {
     navigate(`/message/${conversation._id}`, {
       state: {
         conversationId: conversation._id,
+        user: conversation.participants.find(p => p._id !== user._id), // 👈 change ici
         messageInitial: messageInitial,
-        interlocuteur: conversation.participants.find(p => p._id !== user._id),
         don: conversation.don_id,
       },
     });

@@ -6,7 +6,7 @@ const { initiateConversation } = require('../controllers/conversationApi');
 const verifyToken = require('../middlewares/authMiddleware');
 
 // Récupération des conversations d'un utilisateur
-router.get("/conversations/:userId", verifyToken, async (req, res) => {
+router.get("/conversations/user/:userId", verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
 

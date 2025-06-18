@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import ConversationList from '../components/messages/ConversationList';
@@ -8,100 +8,110 @@ import AlerteReservation from "../components/AlerteReservation";
 import Header from '../components/Header';
 
 const Message = () => {
-  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
+  const conversationId = location.state?.conversationId || params.id;
+  const { state } = location;
+
   const token = localStorage.getItem("token");
+  const currentUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user"));
+    } catch (e) {
+      return null;
+    }
+  }, []);
+
+  const receiver = state?.user;
+  const messageInitial = state?.messageInitial || "";
 
   const [showAlert, setShowAlert] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [conversation, setConversation] = useState(null);
 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { conversationId } = useParams();
-  const { state } = location;
-
-  const receiver = location.state?.user;
-  const messageInitial = location.state?.messageInitial || "";
-
-
-  console.log("🟢 conversationId :", conversationId);
-  console.log("🟡 données passées :", state);
-  // Afficher une alerte si besoin
+  // 🔔 Alerte réservation
   useEffect(() => {
-    if (location.state?.showReservationAlert) {
+    if (state?.showReservationAlert) {
       setShowAlert(true);
     }
-  }, [location.state]);
+  }, [state]);
 
-  // Charger la conversation sélectionnée
+  // 📥 Charger la conversation
   useEffect(() => {
-  const fetchConversation = async () => {
-      
-    try {
-      const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user"));
+    const fetchConversation = async () => {
+      if (!token || !currentUser?._id) {
+        console.error("Redirection vers login - Authentification manquante");
+        navigate('/login');
+        return;
+      }
 
-    if (!token || !user?._id) {
-      console.error("Redirection vers login - Authentification manquante");
-      navigate('/login'); // Rediriger vers la page de connexion
-      return;
+      try {
+        const response = await fetch(
+          `https://diapo-app.onrender.com/api/conversations/id/${conversationId}/${currentUser._id}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            console.error("Non autorisé - redirection");
+            navigate('/login');
+            return;
+          }
+          const text = await response.text();
+          console.error("Erreur serveur :", response.status, text);
+          return;
+        }
+
+        const data = await response.json();
+        console.log("✅ Conversation chargée :", data);
+        setConversation(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement de la conversation :", error);
+      }
+    };
+
+    if (conversationId && currentUser?._id) {
+      fetchConversation();
     }
-      const response = await fetch(`https://diapo-app.onrender.com/api/conversations/id/${conversationId}/${currentUser._id}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+  }, [conversationId, currentUser?._id, navigate, token]);
 
-     if (!response.ok) {
-      throw new Error(`Erreur HTTP: ${response.status}`);
-    }
-
-      const data = await response.json();
-      console.log("Conversations récupérées:", data);
-      setConversation(data);
-      console.log("✅ Conversation chargée :", data);
-    } catch (error) {
-    }
-  };
-
-  fetchConversation();
-}, [conversationId, currentUser?._id, navigate]);
-
-
-  // Charger toutes les conversations de l'utilisateur
+  // 📥 Charger toutes les conversations
   useEffect(() => {
-  const fetchConversations = async () => {
-    try {
-      const token = localStorage.getItem('token');
+    const fetchConversations = async () => {
       if (!token || !currentUser?._id) {
         console.error("Token ou currentUser manquant");
         return;
       }
 
-      const response = await fetch(`https://diapo-app.onrender.com/api/conversations/${currentUser._id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      try {
+        const response = await fetch(
+          `https://diapo-app.onrender.com/api/conversations/${currentUser._id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
-      const data = await response.json();
-      console.log("📦 Conversations récupérées :", data); // 👈 ajoute ceci
-      setConversations(data);
-    } catch (error) {
-      console.error("Erreur lors du chargement des conversations", error);
+        const data = await response.json();
+        console.log("📦 Conversations récupérées :", data);
+        setConversations(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des conversations", error);
+      }
+    };
+
+    if (currentUser?._id) {
+      fetchConversations();
     }
-  };
+  }, [currentUser, token]);
 
-  if (currentUser?._id) {
-    fetchConversations();
-  }
-}, [currentUser]);
-
-
-
-  // Ajouter une nouvelle conversation localement si elle n'existe pas déjà
+  // ➕ Ajouter la conversation si elle n'existe pas localement
   useEffect(() => {
     if (conversationId && receiver) {
       const exists = conversations.some(c => c._id === conversationId);
@@ -109,11 +119,12 @@ const Message = () => {
       if (!exists) {
         const fetchNewConversation = async () => {
           try {
-            const res = await fetch(`https://diapo-app.onrender.com/api/conversations/id/${conversationId}`, {
-              headers: {
-                Authorization: `Bearer ${token}`,
+            const res = await fetch(
+              `https://diapo-app.onrender.com/api/conversations/${conversationId}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
               }
-            });
+            );
 
             if (!res.ok) throw new Error("Échec récupération conversation");
 
@@ -128,7 +139,7 @@ const Message = () => {
       }
     }
   }, [conversationId, receiver, conversations, token]);
-console.log("📦 Données de la conversation :", conversation);
+
   return (
     <div className="p-4">
       <Header />
@@ -138,7 +149,7 @@ console.log("📦 Données de la conversation :", conversation);
           <button
             onClick={() => navigate('/notifications')}
             className="p-2 rounded-full bg-white text-blue-700 hover:bg-gray-100 shadow"
-            title="Retour au tableau de bord"
+            title="Retour aux notifications"
           >
             <FaArrowLeft />
           </button>
@@ -149,10 +160,11 @@ console.log("📦 Données de la conversation :", conversation);
       {showAlert && <AlerteReservation onClose={() => setShowAlert(false)} />}
 
       <div className="flex h-screen">
-        {/* Liste des conversations */}
-        <ConversationList conversations={conversations} currentUser={currentUser} />
+        <ConversationList
+          conversations={conversations}
+          currentUser={currentUser}
+        />
 
-        {/* Zone de messages */}
         {conversation ? (
           <MessageBox
             user={receiver}
