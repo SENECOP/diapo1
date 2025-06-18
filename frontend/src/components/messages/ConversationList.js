@@ -1,42 +1,48 @@
 import { useNavigate } from "react-router-dom";
 
 export default function ConversationList({ conversations = [], currentUser }) {
+  console.log("🧠 currentUser =", currentUser);
+
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
   const getInterlocutorInfo = (conv) => {
-if (!conv || !conv.envoye_par || !conv.recu_par) {
-    console.error("Données de conversation incomplètes:", conv);
-    return { pseudo: "Utilisateur inconnu", avatar: "", _id: null };
-  }
+    console.log("🔎 currentUser?._id =", currentUser?._id);
 
-  if (!token || !currentUser?._id) {
-    console.warn("currentUser non défini");
-    return { pseudo: "Utilisateur inconnu", avatar: "", _id: null };
-  }
+    if (!conv || !conv.envoye_par || !conv.recu_par) {
+      console.error("Données de conversation incomplètes:", conv);
+      return { pseudo: "Utilisateur inconnu", avatar: "", _id: null };
+    }
 
-  console.log("Conversation:", conv);
+    if (!token || !currentUser?._id) {
+      console.warn("currentUser non défini");
+      return { pseudo: "Utilisateur inconnu", avatar: "", _id: null };
+    }
 
-  const isCurrentUserSender = conv.envoye_par?._id === currentUser._id;
-  const interlocutor = isCurrentUserSender ? conv.recu_par : conv.envoye_par;
+    const isCurrentUserSender = conv.envoye_par?._id === currentUser._id;
+    const interlocutor = isCurrentUserSender ? conv.recu_par : conv.envoye_par;
 
-  return {
-    pseudo: interlocutor?.pseudo || "Utilisateur inconnu",
-    avatar: interlocutor?.avatar || "https://via.placeholder.com/50",
-    _id: interlocutor?._id || null,
+    return {
+      pseudo: interlocutor?.pseudo || "Utilisateur inconnu",
+      avatar: interlocutor?.avatar?.trim() || "https://via.placeholder.com/50",
+      _id: interlocutor?._id || null,
+    };
   };
-};
 
+  // 🔁 Supprimer les doublons de conversations basés sur _id
+  const uniqueConversations = Array.from(
+    new Map(conversations.map(item => [item._id, item])).values()
+  );
 
   return (
     <div className="w-1/3 bg-white border-r p-4 overflow-y-auto">
       <h2 className="text-xl font-bold mb-4">Conversations</h2>
 
-      {conversations.length === 0 ? (
+      {uniqueConversations.length === 0 ? (
         <p className="text-gray-500">Aucune conversation</p>
       ) : (
         <ul>
-          {conversations.map((conv) => {
+          {uniqueConversations.map((conv) => {
             const interlocutor = getInterlocutorInfo(conv);
 
             return (

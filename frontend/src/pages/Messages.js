@@ -11,10 +11,11 @@ const Message = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
-  const conversationId = location.state?.conversationId || params.id;
+  const conversationId = location.state?.conversationId || params._id;
   const { state } = location;
 
   const token = localStorage.getItem("token");
+
   const currentUser = useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("user"));
@@ -30,16 +31,10 @@ const Message = () => {
   const [conversations, setConversations] = useState([]);
   const [conversation, setConversation] = useState(null);
 
-  // 🔔 Alerte réservation
-  useEffect(() => {
-    if (state?.showReservationAlert) {
-      setShowAlert(true);
-    }
-  }, [state]);
 
   // 📥 Charger la conversation
   useEffect(() => {
-    const fetchConversation = async () => {
+    const fetchConversation = async ({currentUser, conversations}) => {
       if (!token || !currentUser?._id) {
         console.error("Redirection vers login - Authentification manquante");
         navigate('/login');
@@ -140,6 +135,13 @@ const Message = () => {
     }
   }, [conversationId, receiver, conversations, token]);
 
+   // 🔔 Alerte réservation
+  useEffect(() => {
+    if (state?.showReservationAlert) {
+      setShowAlert(true);
+    }
+  }, [state]);
+
   return (
     <div className="p-4">
       <Header />
@@ -160,10 +162,17 @@ const Message = () => {
       {showAlert && <AlerteReservation onClose={() => setShowAlert(false)} />}
 
       <div className="flex h-screen">
+        {currentUser?  (
         <ConversationList
           conversations={conversations}
           currentUser={currentUser}
         />
+        ) : (
+        <div className="text-center p-4 text-gray-500">
+          Chargement de l'utilisateur...
+        </div>
+
+        )}
 
         {conversation ? (
           <MessageBox

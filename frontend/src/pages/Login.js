@@ -44,7 +44,7 @@ const Login = () => {
         }
 
         const completeUser = {
-          ...userData.user,
+          _id: userData.user._id,
           pseudo: userData.user.pseudo || pseudo,
           numero_telephone: userData.user.numero_telephone || '',
           ville_residence: userData.user.ville_residence || '',

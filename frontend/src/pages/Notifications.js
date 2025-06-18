@@ -15,12 +15,16 @@ const NotificationPage = () => {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const storedToken = localStorage.getItem("token");
-
+   
     if (!storedUser || !storedToken) {
       console.log("Utilisateur non connecté. Redirection...");
       navigate("/login");
       return;
     }
+
+     const normalizedUser = { ...storedUser, _id: storedUser._id || storedUser.id };
+    setUser(normalizedUser);
+
 
     setUser(storedUser);
     setToken(storedToken);
@@ -70,18 +74,16 @@ const NotificationPage = () => {
     return;
   }
 
+  const don_id = selectedNotification.don?._id;
+  const envoye_par = user._id; 
+  const recu_par = selectedNotification.emetteur?._id || selectedNotification.emetteur;
+
+  if (!envoye_par || !recu_par || !don_id) {
+    console.error("Données manquantes:", { envoye_par, recu_par, don_id });
+    return;
+  }
+
   try {
-    const don_id = selectedNotification.don?._id;
-    const envoye_par = user.id || user._id;
-    const recu_par = selectedNotification.emetteur?._id || selectedNotification.emetteur;
-
-    if (!envoye_par || !recu_par || !don_id) {
-      console.error("Données manquantes:", { envoye_par, recu_par, don_id });
-      return;
-    }
-
-    console.log("Tentative de création de conversation avec:", { envoye_par, recu_par, don_id });
-
     const response = await fetch("https://diapo-app.onrender.com/api/conversations/initiate", {
       method: "POST",
       headers: {
@@ -92,36 +94,30 @@ const NotificationPage = () => {
     });
 
     const data = await response.json();
-    console.log("🔁 Résultat de /initiate :", data); // 👈 ajoute ceci
-
+    console.log("🔁 Résultat de /initiate :", data);
 
     if (!data.conversation) {
       throw new Error("Aucune conversation renvoyée par le serveur.");
     }
 
     const conversation = data.conversation;
-
-    // 🔁 Ici on définit le message à envoyer si besoin
     const messageInitial = `Bonjour, je suis intéressé par le don "${selectedNotification.don?.titre || ''}".`;
+
+    const interlocutor = conversation.participants.find(p => p._id !== user._id);
 
     navigate(`/message/${conversation._id}`, {
       state: {
         conversationId: conversation._id,
-        user: conversation.participants.find(p => p._id !== user._id), // 👈 change ici
-        messageInitial: messageInitial,
+        user: interlocutor,
+        messageInitial,
         don: conversation.don_id,
       },
     });
-
   } catch (error) {
-    console.error("Erreur complète:", {
-      message: error.message,
-      stack: error.stack
-    });
+    console.error("Erreur complète:", error);
     alert(`Échec de la création de la conversation: ${error.message}`);
   }
 };
-
 
   return (
     <div className="min-h-screen flex flex-col">

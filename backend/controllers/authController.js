@@ -98,7 +98,7 @@ const login = async (req, res) => {
       message: 'Connexion réussie',
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         pseudo: user.pseudo,
         email: user.email,
         numero_telephone: user.numero_telephone,
