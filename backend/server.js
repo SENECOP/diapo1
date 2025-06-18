@@ -36,7 +36,7 @@ app.use(cors({
   origin:  '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
- credentials: false 
+  credentials: false 
 }));
 
 
@@ -69,14 +69,13 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', (roomId) => {
     socket.join(roomId);
 console.log(`📦 Socket ${socket.id} a rejoint la room ${roomId}`);
-console.log(`🚀 Serveur démarré sur le port ${PORT}`);
   });
 
   // Envoi de message
   socket.on('sendMessage', async (data) => {
-  const { texte, envoye_par, recu_par, conversationId } = data;
+  const { contenu, envoye_par, recu_par, conversationId } = data;
 
-const message = new Message({ texte, envoye_par, recu_par, conversationId });
+const message = new Message({ contenu, envoye_par, recu_par, conversationId });
 const savedMessage = await message.save();
 
 io.to(conversationId).emit('receiveMessage', savedMessage);

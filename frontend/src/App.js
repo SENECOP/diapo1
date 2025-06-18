@@ -35,6 +35,9 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profil" element={<Profil />} />
           <Route path="/message" element={<Message />} />
+          <Route path="/messages/:id" element={<Message />} />
+          
+          <Route path="/message/:conversationId" element={<Message />} />
           <Route path="/archives" element={<Archives />} />
           <Route path="/recuperation" element={<Recuperation />} />
           <Route path="/notifications" element={<NotificationsPage />} />

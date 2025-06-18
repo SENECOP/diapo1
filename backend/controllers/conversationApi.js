@@ -6,7 +6,6 @@ exports.initiateConversation = async (req, res) => {
     console.log("✅ Requête reçue à /api/conversations/initiate");
     console.log("📦 Corps de la requête :", req.body);
 
-    // Attention aux noms des champs envoyés par le client
     const { envoye_par, recu_par, don_id } = req.body;
 
     // Vérification des champs obligatoires
@@ -15,30 +14,36 @@ exports.initiateConversation = async (req, res) => {
       return res.status(400).json({ message: "Champs requis manquants." });
     }
 
-    // Recherche d'une conversation existante avec les bons noms de champs du schéma
+    // Recherche d'une conversation existante
     const existingConversation = await Conversation.findOne({
-  don_id,
-  participants: { $all: [envoye_par, recu_par] }
-}).populate("participants don_id");
+      don_id,
+      participants: { $all: [envoye_par, recu_par] }
+    }).populate("participants don_id");
 
-if (existingConversation) {
-  return res.status(200).json({ conversation: existingConversation });
-}
+    if (existingConversation) {
+      console.log("ℹ️ Conversation existante trouvée :", existingConversation._id);
+      return res.status(200).json({ conversation: existingConversation });
+    }
 
-    // Création d'une nouvelle conversation avec les noms de champs corrects
+    // Création d'une nouvelle conversation
     const nouvelleConversation = new Conversation({
-       envoye_par,
-        recu_par,
-        don_id,
-        participants: [envoye_par, recu_par],
+      envoye_par,
+      recu_par,
+      don_id,
+      participants: [envoye_par, recu_par],
     });
 
-    const populatedConversation = await nouvelleConversation.populate("participants don_id");
-
     const conversationSauvegardee = await nouvelleConversation.save();
-    console.log("✅ Nouvelle conversation sauvegardée :", conversationSauvegardee);
 
-    return res.status(201).json({ conversation: conversationSauvegardee });
+    // Populate après le save
+    const populatedConversation = await Conversation.findById(conversationSauvegardee._id)
+      .populate("participants")
+      .populate("don_id");
+
+    console.log("✅ Nouvelle conversation créée :", populatedConversation);
+
+    return res.status(201).json({ conversation: populatedConversation });
+
   } catch (error) {
     console.error("❌ Erreur serveur dans initiateConversation :", error);
     return res.status(500).json({ message: "Erreur serveur lors de la création de la conversation." });

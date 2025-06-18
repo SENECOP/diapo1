@@ -5,6 +5,11 @@ export default function ConversationList({ conversations = [], currentUser }) {
   const token = localStorage.getItem("token");
 
   const getInterlocutorInfo = (conv) => {
+if (!conv || !conv.envoye_par || !conv.recu_par) {
+    console.error("Données de conversation incomplètes:", conv);
+    return { pseudo: "Utilisateur inconnu", avatar: "", _id: null };
+  }
+
   if (!token || !currentUser?._id) {
     console.warn("currentUser non défini");
     return { pseudo: "Utilisateur inconnu", avatar: "", _id: null };

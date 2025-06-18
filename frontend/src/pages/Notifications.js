@@ -71,9 +71,6 @@ const NotificationPage = () => {
   }
 
   try {
-    console.log("selectedNotification complet :", selectedNotification);
-
-
     const don_id = selectedNotification.don?._id;
     const envoye_par = user.id || user._id;
     const recu_par = selectedNotification.emetteur?._id || selectedNotification.emetteur;
@@ -91,29 +88,28 @@ const NotificationPage = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ 
-        envoye_par, 
-        recu_par, 
-        don_id 
-      }),
+      body: JSON.stringify({ envoye_par, recu_par, don_id }),
     });
 
     const data = await response.json();
-    
+
     if (!data.conversation) {
-  throw new Error("Aucune conversation renvoyée par le serveur.");
-}
+      throw new Error("Aucune conversation renvoyée par le serveur.");
+    }
 
     const conversation = data.conversation;
 
-    navigate("/message", {
+    // 🔁 Ici on définit le message à envoyer si besoin
+    const messageInitial = `Bonjour, je suis intéressé par le don "${selectedNotification.don?.titre || ''}".`;
+
+    navigate(`/message/${conversation._id}`, {
       state: {
         conversationId: conversation._id,
+        messageInitial: messageInitial,
         interlocuteur: conversation.participants.find(p => p._id !== user._id),
-        don: conversation.don_id
-      }
+        don: conversation.don_id,
+      },
     });
-
 
   } catch (error) {
     console.error("Erreur complète:", {
@@ -123,6 +119,7 @@ const NotificationPage = () => {
     alert(`Échec de la création de la conversation: ${error.message}`);
   }
 };
+
 
   return (
     <div className="min-h-screen flex flex-col">

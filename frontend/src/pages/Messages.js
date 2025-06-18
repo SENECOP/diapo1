@@ -17,11 +17,15 @@ const Message = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { id: conversationId } = useParams();
+  const { conversationId } = useParams();
+  const { state } = location;
 
   const receiver = location.state?.user;
   const messageInitial = location.state?.messageInitial || "";
 
+
+  console.log("🟢 conversationId :", conversationId);
+  console.log("🟡 données passées :", state);
   // Afficher une alerte si besoin
   useEffect(() => {
     if (location.state?.showReservationAlert) {
@@ -31,27 +35,40 @@ const Message = () => {
 
   // Charger la conversation sélectionnée
   useEffect(() => {
-    if (!conversationId) return;
+  const fetchConversation = async () => {
+      
+    try {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user"));
 
-    const fetchConversation = async () => {
-      try {
-        const response = await fetch(`https://diapo-app.onrender.com/api/conversations/id/${conversationId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          }
-        });
+    if (!token || !user?._id) {
+      console.error("Redirection vers login - Authentification manquante");
+      navigate('/login'); // Rediriger vers la page de connexion
+      return;
+    }
+      const response = await fetch(`https://diapo-app.onrender.com/api/conversations/id/${conversationId}/${currentUser._id}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-        if (!response.ok) throw new Error("Erreur lors du chargement de la conversation");
+     if (!response.ok) {
+      throw new Error(`Erreur HTTP: ${response.status}`);
+    }
 
-        const data = await response.json();
-        setConversation(data);
-      } catch (error) {
-        console.error("❌ Erreur récupération conversation :", error);
-      }
-    };
+      const data = await response.json();
+      console.log("Conversations récupérées:", data);
+      setConversation(data);
+      console.log("✅ Conversation chargée :", data);
+    } catch (error) {
+    }
+  };
 
-    fetchConversation();
-  }, [conversationId, token]);
+  fetchConversation();
+}, [conversationId, currentUser?._id, navigate]);
+
 
   // Charger toutes les conversations de l'utilisateur
   useEffect(() => {
@@ -111,7 +128,7 @@ const Message = () => {
       }
     }
   }, [conversationId, receiver, conversations, token]);
-
+console.log("📦 Données de la conversation :", conversation);
   return (
     <div className="p-4">
       <Header />

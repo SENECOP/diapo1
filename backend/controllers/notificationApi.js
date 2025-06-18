@@ -27,7 +27,7 @@ const getNotifications = async (req, res) => {
     console.log("Récupération des notifications pour l'utilisateur:", req.user._id);
     // Récupérer les notifications du destinataire (utilisateur connecté)
     const notifications = await Notification.find({ destinataire: req.user._id })
-      .populate("emetteur", "pseudo avatar") 
+      .populate("emetteur") 
 .populate({
   path: "don",
   select: "titre user",
@@ -70,4 +70,5 @@ const markAsRead = async (req, res) => {
 module.exports = {
   getNotifications,
   markAsRead,
+  createNotification,
 };

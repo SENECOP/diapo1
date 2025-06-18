@@ -6,7 +6,7 @@ const messageSchema = new mongoose.Schema({
   envoye_le: { type: Date, default: Date.now },
   lu: { type: Boolean, default: false },
   don_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Don', required: true },
-  envoye_par: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  envoye_par: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   recu_par: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   conversationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation', required: true } // ✅ ajouté
 });

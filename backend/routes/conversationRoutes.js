@@ -13,9 +13,9 @@ router.get("/conversations/:userId", verifyToken, async (req, res) => {
     const conversations = await Conversation.find({
       participants: { $in: [mongoose.Types.ObjectId(userId)] },
     })
-      .populate("envoye_par", "pseudo avatar")
-      .populate("recu_par", "pseudo avatar")
-      .populate("don_id", "description image");
+      .populate("envoye_par")
+      .populate("recu_par")
+      .populate("don_id");
 
     res.status(200).json(conversations); // Renvoie directement les objets complets
   } catch (err) {
@@ -30,11 +30,18 @@ router.post('/conversations/initiate', verifyToken, initiateConversation);
 
 
 // Récupération d'une conversation par son ID (utile pour affichage des messages)
-router.get('/conversations/id/:id', verifyToken, async (req, res) => {
+router.get('/conversations/:id', verifyToken, async (req, res) => {
+  const id = req.params.id;
+
+  // Vérification que l'id est un ObjectId MongoDB valide
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'ID de conversation invalide' });
+  }
+
   try {
-    const conversation = await Conversation.findById(req.params.id)
-      .populate('participants', 'pseudo avatar')
-      .populate('donId'); // Facultatif si tu veux les infos du don
+    const conversation = await Conversation.findById(id)
+      .populate('participants')
+      .populate('don_id'); 
 
     if (!conversation) {
       return res.status(404).json({ message: 'Conversation non trouvée' });
@@ -46,6 +53,7 @@ router.get('/conversations/id/:id', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur', error: err.message });
   }
 });
+
 
 
 module.exports = router;
